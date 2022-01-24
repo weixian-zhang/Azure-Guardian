@@ -87,7 +87,7 @@ class ResourceHunter:
 
     def create_arg_result(self, result_dict):
 
-        arg_result = ARGResult(result_dict['total_records']])
+        arg_result = ARGResult(result_dict['total_records'])
 
         for rsc in result_dict['data']:
 
