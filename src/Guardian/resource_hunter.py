@@ -9,32 +9,88 @@ from azure.identity import DefaultAzureCredential, VisualStudioCodeCredential
 
 class ResourceHunter:
 
-    def get_all_resources(self, subs) -> 'ARGResult':
+    def __init__(self) -> None:
+        self.resources_dict = {}
 
-        azcred = DefaultAzureCredential()#AzureIdentityCredentialAdapter(DefaultAzureCredential())
+    def get_all_resources(self, az_sub_ids) -> 'ARGResult':
 
-        subsList = self.get_subscription_ids(azcred, subs)
+        azcred = DefaultAzureCredential()
 
         argClient = arg.ResourceGraphClient(azcred);
 
-        strQuery = 'Resources'
-        argQueryOptions = arg.models.QueryRequestOptions(result_format="objectArray")
+        arg_result = self.get_resources_handle_pagination(argClient, az_sub_ids)
+
+        return arg_result
+
+
+    def get_all_subscription_ids(self):
+
+        azcred = AzureIdentityCredentialAdapter(DefaultAzureCredential())
+
+        subsList = []
+
+        #if no subscription ids pass in, get all subscription ids
+        subClient = SubscriptionClient(azcred)
+
+        subRaw = [];
+        for sub in subClient.subscriptions.list():
+            subRaw.append(sub.as_dict())
+
+        subsList = []
+        for sub in subRaw:
+            id = sub.get('subscription_id')
+            name = sub.get('display_name')
+            subsList.append(AzureSubscription(name, id))
+
+        return subsList
+
+    def get_resources_handle_pagination(self, argClient, az_sub_ids) -> 'ARGResult':
+
+        arg_query = 'Resources'
+        page_size = 1000
+        skip = 0
+
+        argQueryOptions = arg.models.QueryRequestOptions(top= page_size, skip = skip, result_format="objectArray")
 
         # Create query
-        argQuery = arg.models.QueryRequest(subscriptions=subsList, query=strQuery, options=argQueryOptions)
+        argQuery = arg.models.QueryRequest(subscriptions=az_sub_ids, query=arg_query, options=argQueryOptions)
 
         # Run query
-        jsonResult = argClient.resources(argQuery)
+        query_response = argClient.resources(argQuery)
+        # result as dictionary
+        result_dict = query_response.as_dict()
 
-        result_dict = jsonResult.as_dict()
+        current_count = result_dict['count']
 
+        #arg resource result
         arg_result = self.create_arg_result(result_dict)
+
+        while current_count == page_size:
+
+            skip += current_count
+
+            argQueryOptions = arg.models.QueryRequestOptions(top= page_size, skip = skip, result_format="objectArray")
+
+            # Create query
+            argQuery = arg.models.QueryRequest(subscriptions=az_sub_ids, query=arg_query, options=argQueryOptions)
+
+            query_response = argClient.resources(argQuery)
+
+            #result as dictionary
+            result_dict = query_response.as_dict()
+
+            current_count = result_dict['count']
+
+            temp_result = self.create_arg_result(result_dict)
+
+            #merge result
+            arg_result.arg_resources = arg_result.arg_resources + temp_result.arg_resources
 
         return arg_result
 
     def create_arg_result(self, result_dict):
 
-        arg_result = ARGResult(result_dict['total_records'], result_dict['result_truncated'])
+        arg_result = ARGResult(result_dict['total_records'])
 
         for rsc in result_dict['data']:
 
@@ -47,33 +103,9 @@ class ResourceHunter:
         return arg_result
 
 
-    def get_subscription_ids(self, azcred, subscriptions):
-
-        subsList = []
-
-        if(len(subscriptions) > 0):
-            for sub in subscriptions:
-                print(sub)
-                subsList.append(sub)
-            return subsList
-
-        #if no subscription ids pass in, get all subscription ids
-        subClient = SubscriptionClient(azcred)
-
-        subRaw = [];
-        for sub in subClient.subscriptions.list():
-            subRaw.append(sub.as_dict())
-
-        subsList = []
-        for sub in subRaw:
-            subsList.append(sub.get('subscription_id'))
-
-        return subsList
-
 class ARGResult:
-    def __init__(self, total_records, result_truncated) -> None:
+    def __init__(self, total_records) -> None:
         self.total_records = total_records
-        self.result_truncated = result_truncated
         self.arg_resources = []
 
 class ARGResource:
@@ -92,5 +124,11 @@ class ARGResource:
         self.plan = plan
         self.properties = properties
         self.tags = tags
+
+class AzureSubscription:
+
+    def __init__(self, name, id) -> None:
+        self.name = name
+        self.id = id
 
 
