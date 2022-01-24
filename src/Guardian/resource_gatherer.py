@@ -7,7 +7,7 @@ from azure_identity_credential_wrapper import AzureIdentityCredentialAdapter
 from azure.mgmt.resource import SubscriptionClient
 from azure.identity import DefaultAzureCredential, VisualStudioCodeCredential
 
-class ResourceHunter:
+class ResourceGatherer:
 
     def __init__(self) -> None:
         self.resources_dict = {}
