@@ -16,50 +16,9 @@ class ResourceHunter:
 
         azcred = DefaultAzureCredential()
 
-        subsList = az_sub_ids
-
         argClient = arg.ResourceGraphClient(azcred);
 
-        strQuery = 'Resources'
-        page_size = 1000
-        skip = 0
-
-        argQueryOptions = arg.models.QueryRequestOptions(top= page_size, skip = skip, result_format="objectArray")
-
-        # Create query
-        argQuery = arg.models.QueryRequest(subscriptions=subsList, query=strQuery, options=argQueryOptions)
-
-        # Run query
-        query_response = argClient.resources(argQuery)
-        #result as dictionary
-        result_dict = query_response.as_dict()
-
-        current_count = result_dict['count']
-
-        arg_result = self.create_arg_result(result_dict)
-
-        while current_count == page_size:
-
-            skip += current_count
-
-            argQueryOptions = arg.models.QueryRequestOptions(top= page_size, skip = skip, result_format="objectArray")
-
-            # Create query
-            argQuery = arg.models.QueryRequest(subscriptions=subsList, query=strQuery, options=argQueryOptions)
-
-            query_response = argClient.resources(argQuery)
-
-            #result as dictionary
-            result_dict = query_response.as_dict()
-
-            current_count = result_dict['count']
-
-            temp_result = self.create_arg_result(result_dict)
-
-            #merge result
-            arg_result.arg_resources = arg_result.arg_resources + temp_result.arg_resources
-
-        print(len(arg_result))
+        arg_result = self.get_resources_handle_pagination(argClient, az_sub_ids)
 
         return arg_result
 
@@ -84,6 +43,50 @@ class ResourceHunter:
             subsList.append(AzureSubscription(name, id))
 
         return subsList
+
+    def get_resources_handle_pagination(self, argClient, az_sub_ids) -> 'ARGResult':
+
+        arg_query = 'Resources'
+        page_size = 1000
+        skip = 0
+
+        argQueryOptions = arg.models.QueryRequestOptions(top= page_size, skip = skip, result_format="objectArray")
+
+        # Create query
+        argQuery = arg.models.QueryRequest(subscriptions=az_sub_ids, query=arg_query, options=argQueryOptions)
+
+        # Run query
+        query_response = argClient.resources(argQuery)
+        # result as dictionary
+        result_dict = query_response.as_dict()
+
+        current_count = result_dict['count']
+
+        #arg resource result
+        arg_result = self.create_arg_result(result_dict)
+
+        while current_count == page_size:
+
+            skip += current_count
+
+            argQueryOptions = arg.models.QueryRequestOptions(top= page_size, skip = skip, result_format="objectArray")
+
+            # Create query
+            argQuery = arg.models.QueryRequest(subscriptions=az_sub_ids, query=arg_query, options=argQueryOptions)
+
+            query_response = argClient.resources(argQuery)
+
+            #result as dictionary
+            result_dict = query_response.as_dict()
+
+            current_count = result_dict['count']
+
+            temp_result = self.create_arg_result(result_dict)
+
+            #merge result
+            arg_result.arg_resources = arg_result.arg_resources + temp_result.arg_resources
+
+        return arg_result
 
     def create_arg_result(self, result_dict):
 

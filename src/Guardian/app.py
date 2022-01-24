@@ -15,8 +15,6 @@ class App:
         for sub in az_subs:
             sub_ids.append(sub.id)
 
-        rsc = rscHunter.get_all_resources(sub_ids)
-        print(rsc)
-
+        rscHunter.get_all_resources(sub_ids)
 
 
