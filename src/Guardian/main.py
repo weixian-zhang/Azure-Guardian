@@ -1,11 +1,11 @@
-from resource_hunter import ResourceHunter
+from app import App
 
-def start():
+def run():
 
-    rscHunter = ResourceHunter()
+    app = App()
 
-    subs = ['ee611083-4581-4ba1-8116-a502d4539206']
-    rscHunter.get_all_resources(subs)
+    app.start()
+
 
 if __name__ == '__main__':
-    start()
+    run()
