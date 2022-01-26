@@ -5,10 +5,17 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "debug opa-webapi",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}\\src\\opa-webapi"
+        },
+        {
             "name": "debug guardian",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/src/Guardian/main.py",
+            "program": "${workspaceFolder}/src/guardian-core/main.py",
             "console": "integratedTerminal"
         }
     ]
