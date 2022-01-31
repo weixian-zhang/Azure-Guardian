@@ -12,11 +12,13 @@ class ResourceScanner:
     def __init__(self) -> None:
         self.resources_dict = {}
 
+    
+
     def get_all_resources(self, az_sub_ids) -> 'ARGResult':
 
         azcred = DefaultAzureCredential()
 
-        argClient = arg.ResourceGraphClient(azcred);
+        argClient = arg.ResourceGraphClient(azcred)
 
         arg_result = self.get_resources_handle_pagination(argClient, az_sub_ids)
 
@@ -108,6 +110,9 @@ class ARGResult:
         self.total_records = total_records
         self.arg_resources = []
 
+    def toJson(self):
+        return json.dumps(self, default=lambda o: o.__dict__)
+
 class ARGResource:
     def __init__(self, id, name, type, tenantId, kind, location,
      resourceGroup, subscriptionId, managedBy, sku, plan, properties, tags) -> None:
@@ -124,6 +129,9 @@ class ARGResource:
         self.plan = plan
         self.properties = properties
         self.tags = tags
+
+    def toJson(self):
+        json.dumps(self, default=lambda o: o.__dict__)
 
 class AzureSubscription:
 

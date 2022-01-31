@@ -2,6 +2,7 @@ from argparse import ArgumentError
 from resource_scanner import ResourceScanner
 import os
 import sys
+import json
 from dotenv import load_dotenv
 
 class App:
@@ -17,31 +18,26 @@ class App:
 
             self.rsc_scanner = ResourceScanner()
 
+            subs = ['ee611083-4581-4ba1-8116-a502d4539206']
+
+            #az_subs = rsc_scanner.get_all_subscription_ids()
+
+            # sub_ids = []
+            # for sub in az_subs:
+            #     sub_ids.append(sub.id)
+
+            argresult = self.rsc_scanner.get_all_resources(subs)
+            
+
+            j = argresult.toJson()
+
+            print(j)
+
         except (Exception) as e:
             #Todo: log to mongo
             print(e, sys.stderr)
             raise
-
-    #def start(self):
-
-        # try:
-
-
-
-        #     #subs = ['ee611083-4581-4ba1-8116-a502d4539206']
-
-        #     # az_subs = rsc_scanner.get_all_subscription_ids()
-
-        #     # sub_ids = []
-        #     # for sub in az_subs:
-        #     #     sub_ids.append(sub.id)
-
-        #     # rsc_scanner.get_all_resources(sub_ids)
-
-        # except (Exception) as e:
-        #     #Todo: log to mongo
-        #     print(e, sys.stderr)
-        #     raise
+        
 
 
 class AppConfig:
