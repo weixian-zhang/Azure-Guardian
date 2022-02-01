@@ -65,6 +65,7 @@ func main() {
 
 	hasError(err)
 
+	ctx = context.TODO()
 	results, err := query.Eval(ctx, rego.EvalInput(input))
 
 	if err != nil {
@@ -74,12 +75,16 @@ func main() {
 		// Handle undefined result.
 	} else if _, ok := results[0].Bindings["x"].(bool); !ok {
 
+		expressions := results[0].Expressions[0]
+		jsonExpr, err := json.Marshal(expressions)
+		fmt.Println(string(jsonExpr))
+
 		resultMaps := results[0].Bindings["x"]
 		rmaps, _ := resultMaps.(map[string]interface{})
 
 		jsonByte, err := json.Marshal(rmaps)
 
-		if hasError(err) {
+		if !hasError(err) {
 			jStr := string(jsonByte)
 			fmt.Println(jStr)
 		}
