@@ -82,9 +82,11 @@ class App:
         '''
         opa_manager = OpaManager()
 
-        opa_manager.add_policy(policy, "test")
+        isPolicyExist = opa_manager.is_policy_exist("azdisk.attachornot")
 
-        opa_manager.eval_policy(input, "test")
+        # opa_manager.add_policy(policy, "test")
+
+        # opa_manager.eval_policy(input, "test")
 
         
 
