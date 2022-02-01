@@ -48,7 +48,7 @@ class App:
 
         policy = '''
 
-            package test
+            package test.2
 
             allow {
                 is_compliance = is_tenantId_allowed
