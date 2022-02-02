@@ -24,7 +24,7 @@ class App:
 
             #subs = ['ee611083-4581-4ba1-8116-a502d4539206']
 
-            #az_subs = rsc_scanner.get_all_subscription_ids()
+            #az_subs = rsc_scanner.get_all_subscriptions_by_azidenity()
 
             # sub_ids = []
             # for sub in az_subs:
