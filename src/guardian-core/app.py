@@ -1,6 +1,7 @@
 from argparse import ArgumentError
-from resource_scanner import ResourceScanner
+from azresource_scanner import ResourceScanner
 from opa_manager import OpaManager
+from config import AppConfig
 
 import os
 import sys
@@ -11,13 +12,16 @@ class App:
 
     def __init__(self) -> None:
 
+        self.appconfig = None
+
         try:
-            self.policy_eval_test()
+            #self.policy_eval_test()
 
-            self.app_config = AppConfig()
-            self.app_config.load_from_envvar()
+            appconfig = AppConfig()
 
-            self.rsc_scanner = ResourceScanner()
+            self.appConfig = appconfig.load_config()
+
+            #self.rsc_scanner = ResourceScanner()
 
             #subs = ['ee611083-4581-4ba1-8116-a502d4539206']
 
