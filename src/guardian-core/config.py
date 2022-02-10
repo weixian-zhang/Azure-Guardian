@@ -9,13 +9,13 @@ from azure.identity import DefaultAzureCredential
 import log
 import time
 
-config_key_db_name = 'DB_NAME'
-config_key_db_connstring = 'DB_CONN_STRING'
-config_key_keyvault_name = 'KEYVAULT_NAME'
-config_key_resource_scan_interval_mins = 'RESOURCE_SCAN_INTERVAL_MINS'
-config_key_azidenity_tenantid = 'AZURE_TENANT_ID'
-config_key_azidenity_clientid = 'AZURE_CLIENT_ID'
-config_key_azidenity_clientsecret = 'AZURE_CLIENT_SECRET'
+config_key_db_name = 'DB-NAME'
+config_key_db_connstring = 'DB-CONN-STRING'
+config_key_keyvault_name = 'KEYVAULT-NAME'
+config_key_resource_scan_interval_mins = 'RESOURCE-SCAN-INTERVAL-MINS'
+config_key_azidenity_tenantid = 'AZURE-TENANT-ID'
+config_key_azidenity_clientid = 'AZURE-CLIENT-ID'
+config_key_azidenity_clientsecret = 'AZURE-CLIENT-SECRET'
 
 class AppConfig:
 
@@ -26,7 +26,6 @@ class AppConfig:
         #if .env exist
         load_dotenv()
 
-
         self.dbName= dbName
         self.dbConnstring = dbConnstring
         self.resourceScanIntervalMins = resourceScanIntervalMins
@@ -34,73 +33,116 @@ class AppConfig:
         self.azidenityClientId= azidenityClientId
         self.azidenityClientSecret= azidenityClientSecret
 
-    def load_config(self):
+class ConfigLoader:
+
+    def load_config(self) -> AppConfig:
         
         loadConfigSuccess = False
+        ok = False
+        appconfig = None
 
         
-        while not loadConfigSuccess:
+        while not ok:
 
-            if self.load_from_environ():
-                loadConfigSuccess = True
+            ok, appconfig = self.load_from_environ()
+
+            if ok:
+                return appconfig
             else:
-                if self.load_from_akv():
-                    loadConfigSuccess = True
+                ok, appconfig = self.load_from_akv()
+                if ok:
+                    return appconfig
 
-            if not loadConfigSuccess:
-                time.sleep(3)
+            log.info('DbName and DB connection string settings are not found in environment variables or Azure Key Vault')
+
+            time.sleep(3)
 
 
     def load_from_environ(self) -> bool:
 
-        environLoader =  EnvironLoader()
+        dbName =  os.environ.get(config_key_db_name)
+        dbConnStr =  os.environ.get(config_key_db_connstring)
 
-        environConfig = environLoader.load_config()
+        resourceScanIntervalMins = os.environ.get(config_key_resource_scan_interval_mins)
+        if resourceScanIntervalMins == None:
+           self.resourceScanIntervalMins = 10
+        else:
+           self.resourceScanIntervalMins = resourceScanIntervalMins
 
-        if self.checkDBNameConnStringExists(environConfig):
+        tenantId = os.environ.get(config_key_azidenity_tenantid)
+        clientId = os.environ.get(config_key_azidenity_clientid)
+        clientsecret = os.environ.get(config_key_azidenity_clientsecret)
 
-                self.set_environ_azclientidsecret()
-                return True
+        if self.checkDBNameConnStringExists(dbName, dbConnStr):
+            self.set_environ_azserviceprincpal_cred(tenantId, clientId, clientsecret)
+            return True, AppConfig(dbName, dbConnStr, resourceScanIntervalMins, tenantId, clientId, clientsecret)
 
-        return False
+        return False, None
 
     def load_from_akv(self) -> bool:
 
-        akvLoader = KeyVaultLoader()
+        azcred = DefaultAzureCredential()
 
-        akvConfig =  akvLoader.load_config()
+        akvName = os.environ.get(config_key_keyvault_name)
 
-        if self.checkDBNameConnStringExists(akvConfig):
-            self.set_environ_azclientidsecret(akvConfig)
-            return True
+        if not self.isAKVNameExists(akvName):
+            raise ArgumentError('Azure Key Vault name does not exist')
 
-        return False
+        akvUrl = f"https://{akvName}.vault.azure.net"
 
+        akvSecretClient = SecretClient(vault_url=akvUrl, credential=azcred)
+
+        try:
+
+            dbName =  akvSecretClient.get_secret(config_key_db_name).value
+            dbConnStr =  akvSecretClient.get_secret(config_key_db_connstring).value
+
+            resourceScanIntervalMins = akvSecretClient.get_secret(config_key_resource_scan_interval_mins).value
+            if resourceScanIntervalMins == None:
+                self.resourceScanIntervalMins = 10
+            else:
+                self.resourceScanIntervalMins = resourceScanIntervalMins
+
+            tenantId = akvSecretClient.get_secret(config_key_azidenity_tenantid).value
+            clientId = akvSecretClient.get_secret(config_key_azidenity_clientid).value
+            clientsecret = akvSecretClient.get_secret(config_key_azidenity_clientsecret).value
+
+            if self.checkDBNameConnStringExists(dbName, dbConnStr):
+                self.set_environ_azserviceprincpal_cred(tenantId, clientId, clientsecret)
+                return True, AppConfig(dbName, dbConnStr, resourceScanIntervalMins, tenantId, clientId, clientsecret)
+
+        except (Exception) as e:
+            log.error(e)
+
+        return False, None
+
+    def isAKVNameExists(self, akvName):
+
+        if akvName == '':
+            return False
+
+        return True
 
 
     # if managed identity is not used, switch to service principal
     # azure.identity.EnvironmentCredential will check environ for tenant id, client id and client secret
-    def set_environ_azclientidsecret(self) -> None:
+    def set_environ_azserviceprincpal_cred(self, tenantid, clientid, clientsecret) -> None:
         
-        os.environ.setdefault(config_key_azidenity_tenantid, self.azidenityTenantId) 
-        os.environ.setdefault(config_key_azidenity_clientid, self.azidenityClientId)
-        os.environ.setdefault(config_key_azidenity_clientsecret, self.azidenityClientSecret)
+        os.environ.setdefault(config_key_azidenity_tenantid, tenantid) 
+        os.environ.setdefault(config_key_azidenity_clientid, clientid)
+        os.environ.setdefault(config_key_azidenity_clientsecret, clientsecret)
 
-    def checkDBNameConnStringExists(self, appconfig):
+    def checkDBNameConnStringExists(self, dbName, dbConnString):
 
-        props = vars(appconfig)
+        #props = vars(appconfig)
 
-        if props['dbName'] == '' or props['dbConnstring'] == '':
+        if dbName == None or dbConnString == None:
             return False
 
-        return True         
+        return True    
        
 
-class ConfigLoader(ABC):
 
-    @abstractmethod
-    def load_config() -> AppConfig:
-        pass
 
 class EnvironLoader(ConfigLoader):
 
@@ -174,6 +216,7 @@ class KeyVaultLoader(ConfigLoader):
 
         except (Exception) as e:
             log.error(e)
+            pass
 
 
     def isAKVNameExists(self, akvName):

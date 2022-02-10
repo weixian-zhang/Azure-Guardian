@@ -1,7 +1,7 @@
 from argparse import ArgumentError
 from azresource_scanner import ResourceScanner
 from opa_manager import OpaManager
-from config import AppConfig
+from config import AppConfig, ConfigLoader
 
 import os
 import sys
@@ -17,9 +17,9 @@ class App:
         try:
             #self.policy_eval_test()
 
-            appconfig = AppConfig()
+            configLoader = ConfigLoader()
 
-            self.appConfig = appconfig.load_config()
+            self.appConfig = configLoader.load_config()
 
             #self.rsc_scanner = ResourceScanner()
 
