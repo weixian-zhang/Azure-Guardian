@@ -21,6 +21,8 @@ class App:
 
             self.appConfig = configLoader.load_config()
 
+            print(self.appConfig)
+
             #self.rsc_scanner = ResourceScanner()
 
             #subs = ['ee611083-4581-4ba1-8116-a502d4539206']
