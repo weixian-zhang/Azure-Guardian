@@ -2,6 +2,7 @@ from argparse import ArgumentError
 from azresource_scanner import ResourceScanner
 from opa_manager import OpaManager
 from config import AppConfig, ConfigLoader
+from db import Mongo
 
 import os
 import sys
@@ -21,7 +22,9 @@ class App:
 
             self.appConfig = configLoader.load_config()
 
-            print(self.appConfig)
+            mongodb = Mongo()
+
+            
 
             #self.rsc_scanner = ResourceScanner()
 

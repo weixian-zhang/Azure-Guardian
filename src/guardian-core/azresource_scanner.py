@@ -5,7 +5,7 @@ import json
 from azure.mgmt.resource import SubscriptionClient
 from azure.identity import DefaultAzureCredential, VisualStudioCodeCredential
 
-class ResourceScanner:
+class AzResourceScanner:
 
     def __init__(self) -> None:
         self.resources_dict = {}

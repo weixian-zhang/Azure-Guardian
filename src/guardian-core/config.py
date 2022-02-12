@@ -2,7 +2,6 @@
 from argparse import ArgumentError
 from distutils.command.config import config
 import os
-from abc import ABC, abstractmethod
 from dotenv import load_dotenv
 from azure.keyvault.secrets import SecretClient
 from azure.identity import DefaultAzureCredential
