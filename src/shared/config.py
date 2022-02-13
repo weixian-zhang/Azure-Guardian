@@ -86,7 +86,8 @@ class ConfigLoader:
         akvName = os.environ.get(config_key_keyvault_name)
 
         if not self.isAKVNameExists(akvName):
-            raise ArgumentError('Azure Key Vault name does not exist')
+            log.info('Key Vault name not found')
+            return False, None
 
         akvUrl = f"https://{akvName}.vault.azure.net"
 

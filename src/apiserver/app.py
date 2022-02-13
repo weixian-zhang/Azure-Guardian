@@ -1,13 +1,18 @@
 from argparse import ArgumentError
-from azresource_scanner import ResourceScanner
-from opa_manager import OpaManager
-from config import AppConfig, ConfigLoader
-from db import Mongo
-
-import os
+from azresource_scanner import AzResourceScanner
 import sys
-import json
 from dotenv import load_dotenv
+
+def load_shared_modules():
+    import sys
+    import os
+    # adding Folder_2 to the system path
+    sharedPath = os.path.join(os.getcwd(),'src', 'shared')
+    sys.path.insert(1,sharedPath)
+
+load_shared_modules()
+from config import ConfigLoader, AppConfig
+from db import PostgreSql
 
 class App:
 
@@ -22,9 +27,10 @@ class App:
 
             self.appConfig = configLoader.load_config()
 
-            mongodb = Mongo()
+            db = PostgreSql(self.appConfig)
 
-            
+            db.create_policy('d','f','f','f','f')
+          
 
             #self.rsc_scanner = ResourceScanner()
 
