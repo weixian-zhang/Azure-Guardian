@@ -13,6 +13,17 @@ from config import ConfigLoader
 from db import PostgreSql
 from policy_unitofwork import PolicyUnitOfWork
 
+def load_shared_modules():
+    import sys
+    import os
+    # adding Folder_2 to the system path
+    sharedPath = os.path.join(os.getcwd(),'src', 'shared')
+    sys.path.insert(1,sharedPath)
+
+load_shared_modules()
+from config import ConfigLoader, AppConfig
+from db import PostgreSql
+
 class App:
 
     policy = '''
