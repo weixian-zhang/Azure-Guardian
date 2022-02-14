@@ -29,7 +29,19 @@ class App:
 
             db = PostgreSql(self.appConfig)
 
-            db.create_policy('d','f','f','f','f')
+            # db.create_policy('Microsoft.Storage/Disks','f','f','f','f')
+
+            # db.create_policy('Microsoft.Compute/VirtualMachines','sads','fasdas','f','f')
+
+            # policies = db.list_all_policies()
+
+            # for p in policies:
+            #     print(p.resource_provider)
+            #     print(p.name)
+
+            #db.update_policy('da', 'updated')
+
+            #db.delete_policy('da')
           
 
             #self.rsc_scanner = ResourceScanner()

@@ -5,6 +5,8 @@ from sqlalchemy import Column, Integer, String, Date, create_engine
 from sqlalchemy_utils import database_exists, create_database
 from sqlalchemy.orm import sessionmaker
 from datetime import date
+from typing import List
+import uuid
 
 class DB(ABC):
 
@@ -50,15 +52,6 @@ Base = declarative_base()
 class Policy(Base):
     __tablename__ = 'policy'
 
-    # def __init__(self, id, resource_provider, policy_name, description, username, rego, UpdatedTime) -> None:
-    #     id = Column(String, primary_key=True)
-    #     resource_provider = Column(String)
-    #     policy_name = Column(String)
-    #     description = Column(Integer)
-    #     username = Column(Integer)
-    #     rego = Column(String)
-    #     UpdatedTime = Column(Date)
-
     id = Column(String, primary_key=True)
     resource_provider = Column(String)
     policy_name = Column(String)
@@ -74,7 +67,7 @@ class PostgreSql(DB):
     def __init__(self, appconfig: AppConfig) -> None:
         super().__init__()
 
-        dbUri = f'postgresql://dbadmin:EasyToRemember1231@postgresql-azguardian-dev.postgres.database.azure.com:5432/{PostgreSql.DbName}'
+        dbUri = f'postgresql://{appconfig.dbUserName}:{appconfig.dbUserPass}@{appconfig.dbHost}:5432/{PostgreSql.DbName}'
 
         engine = create_engine(dbUri)
 
@@ -85,52 +78,36 @@ class PostgreSql(DB):
 
         Session = sessionmaker(bind=engine)
 
+        self.PostgreSession: Session
         self.PostgreSession = Session()
 
-#host=postgresql-azguardian-dev.postgres.database.azure.com port=5432 dbname={your_database} user=dbadmin password={your_password} sslmode=require
         self.appconfig = appconfig
 
-        
+    def create_policy(self, resourceProvider, name, desc, username, rego):
 
-    # def initDb(self, dbanme, dbconnstr):
-    #     pass
-    #     """Connect to the API for MongoDB, create DB and collection, perform CRUD operations"""
-    #     mongoClient = pymongo.MongoClient(self.appconfig.dbConnstring)
-
-    #     try:
-    #         mongoClient.server_info() # validate connection string
-    #     except pymongo.errors.ServerSelectionTimeoutError:
-    #         raise TimeoutError("Invalid API for MongoDB connection string or timed out when attempting to connect")
-
-    #     self.mongodb = self.mongoClient[Mongo.mongodbName]
-
-    #     #check if azguardian database doesn't exist
-    #     if Mongo.mongodbName not in mongoClient.list_database_names():
-    #         # Database with 400 RU throughput that can be shared across the DB's collections
-    #         self.mongodb.command({'customAction': "CreateDatabase", 'offerThroughput': 400})
-    #         print("Created db {} with shared throughput". format(Mongo.MongoDbName))
-
-
-    def create_policy(self, id, resourceProvider, name, desc, username):
-
-        policy = Policy(id = 'da', resource_provider='dasa', policy_name='dasa', description='dasa', username='dasa', rego='dasa', UpdatedTime=date.today())
+        policy = Policy(id = self.uid(), resource_provider= resourceProvider, policy_name= name, description= desc, username= username, rego= rego, UpdatedTime=date.today())
         self.PostgreSession.add(policy)
         self.PostgreSession.commit()
-        # + id, time
-        pass
 
-    def update_policy(self, id):
-        # + id, time
-        pass
+    def update_policy(self, id, resourceProvider = '', name= '', desc= '', username= '', rego= ''):
+
+        policy = self.PostgreSession.query(Policy).filter(Policy.id == id).first()
+        policy.resource_provider = resourceProvider
+        policy.name = name
+        policy.desc = desc
+        policy.rego = rego
+        policy.username = username
+
+        self.PostgreSession.commit()
 
     def delete_policy(self, id):
-        # + id, time
-        pass
+        policy = self.PostgreSession.query(Policy).filter(Policy.id == id).first()
+        self.PostgreSession.delete(policy)
+        self.PostgreSession.commit()
 
-    def delete_policy(self, *id):
-        # + id, time
-        pass
+    def list_all_policies(self) -> List[Policy]:
+        policies = self.PostgreSession.query(Policy).all()
+        return policies
 
-    def list_all_policies(self):
-        # + id, time
-        pass
+    def uid(self):
+        return str(uuid.uuid4())[:8]

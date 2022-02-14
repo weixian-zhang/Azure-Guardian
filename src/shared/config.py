@@ -1,6 +1,7 @@
 
 from argparse import ArgumentError
 from distutils.command.config import config
+from multiprocessing.sharedctypes import Value
 import os
 from dotenv import load_dotenv
 from azure.keyvault.secrets import SecretClient
@@ -9,8 +10,9 @@ import log
 import time
 from utils import Utils
 
-config_key_db_name = 'DB-NAME'
-config_key_db_connstring = 'DB-CONN-STRING'
+config_key_db_host = 'DB-HOST'
+config_key_db_user_name= 'DB-USER-NAME'
+config_key_db_user_password= 'DB-USER-PASSWORD'
 config_key_keyvault_name = 'KEYVAULT-NAME'
 config_key_resource_scan_interval_mins = 'RESOURCE-SCAN-INTERVAL-MINS'
 config_key_azidenity_tenantid = 'AZURE-TENANT-ID'
@@ -20,11 +22,12 @@ config_key_azidenity_clientsecret = 'AZURE-CLIENT-SECRET'
 class AppConfig:
 
 
-    def __init__(self, dbName = '', dbConnstring = '', resourceScanIntervalMins = 10,
+    def __init__(self, dbHost = '', dbUserName = '', dbUserPass = '', resourceScanIntervalMins = 10,
     azidenityTenantId = '', azidenityClientId = '', azidenityClientSecret = '') -> None:
 
-        self.dbName= dbName
-        self.dbConnstring = dbConnstring
+        self.dbHost= dbHost
+        self.dbUserName = dbUserName
+        self.dbUserPass = dbUserPass
         self.resourceScanIntervalMins = resourceScanIntervalMins
         self.azidenityTenantId = azidenityTenantId
         self.azidenityClientId= azidenityClientId
@@ -60,10 +63,11 @@ class ConfigLoader:
 
     def load_from_environ(self) -> bool:
 
-        dbName =  os.environ.get(config_key_db_name)
-        dbConnStr =  os.environ.get(config_key_db_connstring)
+        dbHost =  os.environ.get(config_key_db_host)
+        dbUserName =  os.environ.get(config_key_db_user_name)
+        dbUserPassword =  os.environ.get(config_key_db_user_password)
 
-        if not self.isDBNameConnStringExists(dbName, dbConnStr):
+        if not self.isDBCredExists(dbHost, dbUserName, dbUserPassword):
             return False, None
 
         resourceScanIntervalMins = os.environ.get(config_key_resource_scan_interval_mins)
@@ -77,7 +81,7 @@ class ConfigLoader:
         clientsecret = os.environ.get(config_key_azidenity_clientsecret)
 
         self.set_environ_azserviceprincpal_cred(tenantId, clientId, clientsecret)
-        return True, AppConfig(dbName, dbConnStr, resourceScanIntervalMins, tenantId, clientId, clientsecret)
+        return True, AppConfig(dbHost, dbUserName, dbUserPassword, resourceScanIntervalMins, tenantId, clientId, clientsecret)
 
     def load_from_akv(self) -> bool:
 
@@ -94,11 +98,11 @@ class ConfigLoader:
         akvSecretClient = SecretClient(vault_url=akvUrl, credential=azcred)
 
         try:
+            dbHost =  akvSecretClient.get_secret(config_key_db_host).value
+            dbUserName =  akvSecretClient.get_secret(config_key_db_user_name).value
+            dbUserPassword =  akvSecretClient.get_secret(config_key_db_user_password).value
 
-            dbName =  akvSecretClient.get_secret(config_key_db_name).value
-            dbConnStr =  akvSecretClient.get_secret(config_key_db_connstring).value
-
-            if not self.isDBNameConnStringExists(dbName, dbConnStr):
+            if not self.isDBCredExists(dbHost, dbUserName, dbUserPassword):
                 return False, None
 
         except (Exception) as e:
@@ -148,7 +152,7 @@ class ConfigLoader:
         clientsecret = get_clientsecret(akvSecretClient)
         
         self.set_environ_azserviceprincpal_cred(tenantId, clientId, clientsecret)
-        return True, AppConfig(dbName, dbConnStr, resourceScanIntervalMins, tenantId, clientId, clientsecret)
+        return True, AppConfig(dbHost, dbUserName, dbUserPassword, resourceScanIntervalMins, tenantId, clientId, clientsecret)
 
     def isAKVNameExists(self, akvName):
 
@@ -167,11 +171,11 @@ class ConfigLoader:
             os.environ.setdefault(config_key_azidenity_clientid, clientid)
             os.environ.setdefault(config_key_azidenity_clientsecret, clientsecret)
 
-    def isDBNameConnStringExists(self, dbName, dbConnString):
+    def isDBCredExists(self, dbHost, dbUserName, dbUserPassword):
 
         #props = vars(appconfig)
 
-        if Utils.is_none_or_empty_str(dbName) or Utils.is_none_or_empty_str(dbConnString):
+        if Utils.is_none_or_empty_str(dbHost) or Utils.is_none_or_empty_str(dbUserName) or Utils.is_none_or_empty_str(dbUserPassword):
             return False
 
         return True    
