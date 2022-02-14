@@ -10,18 +10,6 @@ import uuid
 
 class DB(ABC):
 
-    # @abstractmethod
-    # def init(self, dbanme, dbconnstr):
-    #     pass
-
-    # @abstractmethod
-    # def save_subscription(self, id, name):
-    #     pass
-
-    # @abstractmethod
-    # def get_subscriptions(self):
-    #     pass
-
     @abstractmethod
     def create_policy(self, resourceProvider, name, desc, username):
         # + id, time
