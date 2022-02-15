@@ -5,30 +5,21 @@ from sqlalchemy import Column, Integer, String, Date, create_engine
 from sqlalchemy_utils import database_exists, create_database
 from sqlalchemy.orm import sessionmaker
 from datetime import date
+from typing import List
+import log
+import uuid
 
 class DB(ABC):
 
-    # @abstractmethod
-    # def init(self, dbanme, dbconnstr):
-    #     pass
-
-    # @abstractmethod
-    # def save_subscription(self, id, name):
-    #     pass
-
-    # @abstractmethod
-    # def get_subscriptions(self):
-    #     pass
-
     @abstractmethod
-    def create_policy(self, resourceProvider, name, desc, username):
+    def create_or_update_policy(self, resourceProvider, packageName, desc, username):
         # + id, time
         pass
 
-    @abstractmethod
-    def update_policy(self, id):
-        # + id, time
-        pass
+    # @abstractmethod
+    # def update_policy(self, id):
+    #     # + id, time
+    #     pass
 
     @abstractmethod
     def delete_policy(self, id):
@@ -50,21 +41,12 @@ Base = declarative_base()
 class Policy(Base):
     __tablename__ = 'policy'
 
-    # def __init__(self, id, resource_provider, policy_name, description, username, rego, UpdatedTime) -> None:
-    #     id = Column(String, primary_key=True)
-    #     resource_provider = Column(String)
-    #     policy_name = Column(String)
-    #     description = Column(Integer)
-    #     username = Column(Integer)
-    #     rego = Column(String)
-    #     UpdatedTime = Column(Date)
-
     id = Column(String, primary_key=True)
     resource_provider = Column(String)
-    policy_name = Column(String)
+    package_name = Column(String)
+    rego = Column(String)
     description = Column(String)
     username = Column(String)
-    rego = Column(String)
     UpdatedTime = Column(Date)
 
 class PostgreSql(DB):
@@ -74,7 +56,11 @@ class PostgreSql(DB):
     def __init__(self, appconfig: AppConfig) -> None:
         super().__init__()
 
+<<<<<<< HEAD
         dbUri = f'postgresql://-:-@postgresql-azguardian-dev.postgres.database.azure.com:5432/{PostgreSql.DbName}'
+=======
+        dbUri = f'postgresql://{appconfig.dbUserName}:{appconfig.dbUserPass}@{appconfig.dbHost}:5432/{PostgreSql.DbName}'
+>>>>>>> f3947200f26258bfa605beac1af2cc713f0699cb
 
         engine = create_engine(dbUri)
 
@@ -85,52 +71,61 @@ class PostgreSql(DB):
 
         Session = sessionmaker(bind=engine)
 
+        self.PostgreSession: Session
         self.PostgreSession = Session()
 
-#host=postgresql-azguardian-dev.postgres.database.azure.com port=5432 dbname={your_database} user=dbadmin password={your_password} sslmode=require
         self.appconfig = appconfig
 
+    def create_or_update_policy(self, resourceProvider, packageName, desc, username, rego):
+
+        exist, policy = self.is_policy_exists(packageName)
+        if exist:
+            ok = self.update_policy(resourceProvider=resourceProvider, packageName=packageName, \
+                rego=rego,desc=desc,username=username)
+            return ok
         
+        policy = Policy(id = self.uid(), resource_provider= resourceProvider, package_name= packageName, \
+            description= desc, username= username, rego= rego, UpdatedTime=date.today())
 
-    # def initDb(self, dbanme, dbconnstr):
-    #     pass
-    #     """Connect to the API for MongoDB, create DB and collection, perform CRUD operations"""
-    #     mongoClient = pymongo.MongoClient(self.appconfig.dbConnstring)
-
-    #     try:
-    #         mongoClient.server_info() # validate connection string
-    #     except pymongo.errors.ServerSelectionTimeoutError:
-    #         raise TimeoutError("Invalid API for MongoDB connection string or timed out when attempting to connect")
-
-    #     self.mongodb = self.mongoClient[Mongo.mongodbName]
-
-    #     #check if azguardian database doesn't exist
-    #     if Mongo.mongodbName not in mongoClient.list_database_names():
-    #         # Database with 400 RU throughput that can be shared across the DB's collections
-    #         self.mongodb.command({'customAction': "CreateDatabase", 'offerThroughput': 400})
-    #         print("Created db {} with shared throughput". format(Mongo.MongoDbName))
-
-
-    def create_policy(self, id, resourceProvider, name, desc, username):
-
-        policy = Policy(id = 'da', resource_provider='dasa', policy_name='dasa', description='dasa', username='dasa', rego='dasa', UpdatedTime=date.today())
         self.PostgreSession.add(policy)
         self.PostgreSession.commit()
-        # + id, time
-        pass
 
-    def update_policy(self, id):
-        # + id, time
-        pass
+        return True
+
+    def is_policy_exists(self, packageName):
+        policy = self.PostgreSession.query(Policy).filter(Policy.package_name == packageName).first()
+        if policy != None:
+            return True, policy
+        return False, None
+
+    #packageName is unique
+    def update_policy(self, resourceProvider = '', packageName= '', desc= '', username= '', rego= ''):
+
+        try:
+
+            policy = self.PostgreSession.query(Policy).filter(Policy.package_name == packageName).first()
+            policy.resource_provider = resourceProvider
+            policy.packageName = packageName
+            policy.desc = desc
+            policy.rego = rego
+            policy.username = username
+
+            self.PostgreSession.commit()
+
+            return True
+        except (Exception) as e:
+            log.error(e)
+            return False
+
 
     def delete_policy(self, id):
-        # + id, time
-        pass
+        policy = self.PostgreSession.query(Policy).filter(Policy.id == id).first()
+        self.PostgreSession.delete(policy)
+        self.PostgreSession.commit()
 
-    def delete_policy(self, *id):
-        # + id, time
-        pass
+    def list_all_policies(self) -> List[Policy]:
+        policies = self.PostgreSession.query(Policy).all()
+        return policies
 
-    def list_all_policies(self):
-        # + id, time
-        pass
+    def uid(self):
+        return str(uuid.uuid4())[:8]
