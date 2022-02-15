@@ -61,12 +61,6 @@ class App:
 
             self.appConfig = configLoader.load_config()
 
-            db = PostgreSql(self.appConfig)
-
-            uowPolicy = PolicyUnitOfWork(self.appConfig, db)
-
-            uowPolicy.create_or_update_policy('Microsoft.Compute/VirtualMachines', App.policy, 'abc', 'abc')
-
         except (Exception) as e:
             #Todo: log to mongo
             print(e, sys.stderr)
