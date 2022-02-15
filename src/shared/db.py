@@ -74,7 +74,7 @@ class PostgreSql(DB):
     def __init__(self, appconfig: AppConfig) -> None:
         super().__init__()
 
-        dbUri = f'postgresql://dbadmin:EasyToRemember1231@postgresql-azguardian-dev.postgres.database.azure.com:5432/{PostgreSql.DbName}'
+        dbUri = f'postgresql://-:-@postgresql-azguardian-dev.postgres.database.azure.com:5432/{PostgreSql.DbName}'
 
         engine = create_engine(dbUri)
 
