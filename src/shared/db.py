@@ -12,14 +12,14 @@ import uuid
 class DB(ABC):
 
     @abstractmethod
-    def create_update_policy(self, resourceProvider, packageName, desc, username):
+    def create_or_update_policy(self, resourceProvider, packageName, desc, username):
         # + id, time
         pass
 
-    @abstractmethod
-    def update_policy(self, id):
-        # + id, time
-        pass
+    # @abstractmethod
+    # def update_policy(self, id):
+    #     # + id, time
+    #     pass
 
     @abstractmethod
     def delete_policy(self, id):
@@ -72,11 +72,11 @@ class PostgreSql(DB):
 
         self.appconfig = appconfig
 
-    def create_update_policy(self, resourceProvider, packageName, desc, username, rego):
+    def create_or_update_policy(self, resourceProvider, packageName, desc, username, rego):
 
         exist, policy = self.is_policy_exists(packageName)
         if exist:
-            ok = self.update_policy(policy.id, resourceProvider=resourceProvider, packageName=packageName, \
+            ok = self.update_policy(resourceProvider=resourceProvider, packageName=packageName, \
                 rego=rego,desc=desc,username=username)
             return ok
         
@@ -94,7 +94,8 @@ class PostgreSql(DB):
             return True, policy
         return False, None
 
-    def update_policy(self, id, resourceProvider = '', packageName= '', desc= '', username= '', rego= ''):
+    #packageName is unique
+    def update_policy(self, resourceProvider = '', packageName= '', desc= '', username= '', rego= ''):
 
         try:
 

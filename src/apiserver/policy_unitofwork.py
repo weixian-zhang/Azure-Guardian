@@ -3,19 +3,19 @@ from sre_constants import SUCCESS
 from app import load_shared_modules
 load_shared_modules()
 from opa import Opa
-from db import PostgreSql
+from db import DB
 from config import AppConfig
 import log
 
 class PolicyUnitOfWork:
 
-    def __init__(self, config: AppConfig):
+    def __init__(self, config: AppConfig, db: DB):
         
-        self.db = PostgreSql(config)
+        self.db = db #PostgreSql(config)
 
         self.opa = Opa()
 
-    def create_policy(self, resourceProvider, rego, desc, username):
+    def create_or_update_policy(self, resourceProvider, rego, desc, username):
 
         packageNameOK, packageName = self.opa.get_package_name(rego)
 
@@ -35,7 +35,7 @@ class PolicyUnitOfWork:
             log.error(err)
             return False, err
 
-        succeed = self.db.create_update_policy(resourceProvider=resourceProvider, packageName=packageName, rego=rego, \
+        succeed = self.db.create_or_update_policy(resourceProvider=resourceProvider, packageName=packageName, rego=rego, \
             desc=desc, username=username )
 
         #rollback policy creation in OPA

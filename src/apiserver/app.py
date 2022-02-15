@@ -10,6 +10,7 @@ def load_shared_modules():
 load_shared_modules()
 from config import ConfigLoader
 
+from db import PostgreSql
 from policy_unitofwork import PolicyUnitOfWork
 
 class App:
@@ -60,9 +61,11 @@ class App:
 
             self.appConfig = configLoader.load_config()
 
-            uowPolicy = PolicyUnitOfWork(self.appConfig)
+            db = PostgreSql(self.appConfig)
 
-            uowPolicy.create_policy('Microsoft.Compute/VirtualMachines', App.policy, 'abc', 'abc')
+            uowPolicy = PolicyUnitOfWork(self.appConfig, db)
+
+            uowPolicy.create_or_update_policy('Microsoft.Compute/VirtualMachines', App.policy, 'abc', 'abc')
 
         except (Exception) as e:
             #Todo: log to mongo
