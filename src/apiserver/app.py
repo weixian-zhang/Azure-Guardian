@@ -1,78 +1,22 @@
-from argparse import ArgumentError
-from azresource_scanner import AzResourceScanner
 import sys
-from dotenv import load_dotenv
 
 def load_shared_modules():
     import sys
     import os
     # adding Folder_2 to the system path
-    sharedPath = os.path.join(os.getcwd(),'src', 'shared')
-    sys.path.insert(1,sharedPath)
+    sharedModule = os.path.join(os.getcwd(),'src', 'shared')
+    sys.path.insert(1, sharedModule)
 
 load_shared_modules()
-from config import ConfigLoader, AppConfig
-from db import PostgreSql
+from config import ConfigLoader
+
+from policy_unitofwork import PolicyUnitOfWork
 
 class App:
 
-    def __init__(self) -> None:
+    policy = '''
 
-        self.appconfig = None
-
-        try:
-            #self.policy_eval_test()
-
-            configLoader = ConfigLoader()
-
-            self.appConfig = configLoader.load_config()
-
-            db = PostgreSql(self.appConfig)
-
-            # db.create_policy('Microsoft.Storage/Disks','f','f','f','f')
-
-            # db.create_policy('Microsoft.Compute/VirtualMachines','sads','fasdas','f','f')
-
-            # policies = db.list_all_policies()
-
-            # for p in policies:
-            #     print(p.resource_provider)
-            #     print(p.name)
-
-            #db.update_policy('da', 'updated')
-
-            #db.delete_policy('da')
-          
-
-            #self.rsc_scanner = ResourceScanner()
-
-            #subs = ['ee611083-4581-4ba1-8116-a502d4539206']
-
-            #az_subs = rsc_scanner.get_all_subscriptions_by_azidenity()
-
-            # sub_ids = []
-            # for sub in az_subs:
-            #     sub_ids.append(sub.id)
-
-            #argresult = self.rsc_scanner.get_all_resources(subs)
-            
-            # j = argresult.toJson()
-
-            # print(j)
-
-
-            
-
-        except (Exception) as e:
-            #Todo: log to mongo
-            print(e, sys.stderr)
-            raise
-
-    def policy_eval_test(self):
-
-        policy = '''
-
-            package test.2
+            package test.a.b.c
 
             allow {
                 is_compliance = is_tenantId_allowed
@@ -83,7 +27,7 @@ class App:
             }
 	    '''
 
-        input = '''
+    input = '''
             {
                 "id": "/subscriptions/ee611083-4581-4ba1-8116-a502d4539206/resourceGroups/AzureBackupRG_southeastasia_1/providers/Microsoft.Compute/restorePointCollections/AzureBackup_vm-web_140738144265919",
                 "name": "AzureBackup_vm-web_140738144265919",
@@ -104,13 +48,26 @@ class App:
                 "tags": null
             }
         '''
-        opa_manager = OpaManager()
 
-        isPolicyExist = opa_manager.is_policy_exist("azdisk.attachornot")
+    def __init__(self) -> None:
 
-        # opa_manager.add_policy(policy, "test")
+        self.appconfig = None
 
-        # opa_manager.eval_policy(input, "test")
+        try:
+            #self.policy_eval_test()
+
+            configLoader = ConfigLoader()
+
+            self.appConfig = configLoader.load_config()
+
+            uowPolicy = PolicyUnitOfWork(self.appConfig)
+
+            uowPolicy.create_policy('Microsoft.Compute/VirtualMachines', App.policy, 'abc', 'abc')
+
+        except (Exception) as e:
+            #Todo: log to mongo
+            print(e, sys.stderr)
+            raise
 
         
 

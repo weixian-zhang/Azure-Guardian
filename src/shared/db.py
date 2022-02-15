@@ -6,12 +6,13 @@ from sqlalchemy_utils import database_exists, create_database
 from sqlalchemy.orm import sessionmaker
 from datetime import date
 from typing import List
+import log
 import uuid
 
 class DB(ABC):
 
     @abstractmethod
-    def create_policy(self, resourceProvider, name, desc, username):
+    def create_update_policy(self, resourceProvider, packageName, desc, username):
         # + id, time
         pass
 
@@ -42,10 +43,10 @@ class Policy(Base):
 
     id = Column(String, primary_key=True)
     resource_provider = Column(String)
-    policy_name = Column(String)
+    package_name = Column(String)
+    rego = Column(String)
     description = Column(String)
     username = Column(String)
-    rego = Column(String)
     UpdatedTime = Column(Date)
 
 class PostgreSql(DB):
@@ -71,22 +72,46 @@ class PostgreSql(DB):
 
         self.appconfig = appconfig
 
-    def create_policy(self, resourceProvider, name, desc, username, rego):
+    def create_update_policy(self, resourceProvider, packageName, desc, username, rego):
 
-        policy = Policy(id = self.uid(), resource_provider= resourceProvider, policy_name= name, description= desc, username= username, rego= rego, UpdatedTime=date.today())
+        exist, policy = self.is_policy_exists(packageName)
+        if exist:
+            ok = self.update_policy(policy.id, resourceProvider=resourceProvider, packageName=packageName, \
+                rego=rego,desc=desc,username=username)
+            return ok
+        
+        policy = Policy(id = self.uid(), resource_provider= resourceProvider, package_name= packageName, \
+            description= desc, username= username, rego= rego, UpdatedTime=date.today())
+
         self.PostgreSession.add(policy)
         self.PostgreSession.commit()
 
-    def update_policy(self, id, resourceProvider = '', name= '', desc= '', username= '', rego= ''):
+        return True
 
-        policy = self.PostgreSession.query(Policy).filter(Policy.id == id).first()
-        policy.resource_provider = resourceProvider
-        policy.name = name
-        policy.desc = desc
-        policy.rego = rego
-        policy.username = username
+    def is_policy_exists(self, packageName):
+        policy = self.PostgreSession.query(Policy).filter(Policy.package_name == packageName).first()
+        if policy != None:
+            return True, policy
+        return False, None
 
-        self.PostgreSession.commit()
+    def update_policy(self, id, resourceProvider = '', packageName= '', desc= '', username= '', rego= ''):
+
+        try:
+
+            policy = self.PostgreSession.query(Policy).filter(Policy.package_name == packageName).first()
+            policy.resource_provider = resourceProvider
+            policy.packageName = packageName
+            policy.desc = desc
+            policy.rego = rego
+            policy.username = username
+
+            self.PostgreSession.commit()
+
+            return True
+        except (Exception) as e:
+            log.error(e)
+            return False
+
 
     def delete_policy(self, id):
         policy = self.PostgreSession.query(Policy).filter(Policy.id == id).first()
