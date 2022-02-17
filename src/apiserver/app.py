@@ -10,8 +10,7 @@ def load_shared_modules():
 load_shared_modules()
 from config import ConfigLoader
 
-from db import PostgreSql
-from policy_unitofwork import PolicyUnitOfWork
+from azresource import AzResource, AzureSubscription
 
 def load_shared_modules():
     import sys
@@ -71,6 +70,16 @@ class App:
             configLoader = ConfigLoader()
 
             self.appConfig = configLoader.load_config()
+
+            azrsc = AzResource()
+
+            subs: AzureSubscription
+            subs =  azrsc.get_all_subscriptions_by_azidenity()
+            subIds = []
+            for s in subs:
+                subIds.append(s.id)
+
+            result =  azrsc.get_all_resources(subIds)
 
         except (Exception) as e:
             #Todo: log to mongo
