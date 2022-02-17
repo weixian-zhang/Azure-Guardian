@@ -1,19 +1,20 @@
 
+import json
 
-class Utils:
+def is_none_or_empty_str(str):
 
-    @staticmethod
-    def is_none_or_empty_str(str):
+    if str == None or len(str) == 0:
+        return True
 
-        if str == None or len(str) == 0:
-            return True
+    return False
 
-        return False
+def is_int(num):
 
-    @staticmethod
-    def is_int(num):
+    if isinstance(num, int):
+        return True
 
-        if isinstance(num, int):
-            return True
+    return False
 
-        return False
+def to_json(obj):
+    return json.dumps(obj, default=lambda o: o.__dict__, 
+        sort_keys=True, indent=4)

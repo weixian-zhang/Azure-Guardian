@@ -1,3 +1,4 @@
+import json
 import sys
 
 def load_shared_modules():
@@ -22,6 +23,7 @@ def load_shared_modules():
 load_shared_modules()
 from config import ConfigLoader, AppConfig
 from db import PostgreSql
+from utils import to_json
 
 class App:
 
@@ -73,13 +75,17 @@ class App:
 
             azrsc = AzResource()
 
-            subs: AzureSubscription
-            subs =  azrsc.get_all_subscriptions_by_azidenity()
-            subIds = []
-            for s in subs:
-                subIds.append(s.id)
+            # subs: AzureSubscription
+            # subs =  azrsc.get_all_subscriptions_by_azidenity()
+            # subIds = []
+            # for s in subs:
+            #     subIds.append(s.id)
+            # subIds = ['ee611083-4581-4ba1-8116-a502d4539206']
 
-            result =  azrsc.get_all_resources(subIds)
+            # result =  azrsc.get_all_resources(subIds)
+
+            # print(to_json(result.arg_resources, default=lambda o: o.__dict__, 
+            # sort_keys=True, indent=4))
 
         except (Exception) as e:
             #Todo: log to mongo
