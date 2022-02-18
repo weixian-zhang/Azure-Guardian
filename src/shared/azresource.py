@@ -1,6 +1,6 @@
 from typing import Any
 import azure.mgmt.resourcegraph as arg
-import json
+from utils import to_json
 
 from azure.mgmt.resource import SubscriptionClient
 from azure.identity import DefaultAzureCredential, VisualStudioCodeCredential
@@ -25,7 +25,7 @@ class AzResource:
 
     def get_all_subscriptions_by_azidenity(self):
 
-        azcred = AzureIdentityCredentialAdapter(DefaultAzureCredential())
+        azcred = DefaultAzureCredential()#AzureIdentityCredentialAdapter(DefaultAzureCredential())
 
         subsList = []
 
@@ -108,9 +108,6 @@ class ARGResult:
         self.total_records = total_records
         self.arg_resources = []
 
-    def toJson(self):
-        return json.dumps(self, default=lambda o: o.__dict__)
-
 class ARGResource:
     def __init__(self, id, name, type, tenantId, kind, location,
      resourceGroup, subscriptionId, managedBy, sku, plan, properties, tags) -> None:
@@ -127,9 +124,7 @@ class ARGResource:
         self.plan = plan
         self.properties = properties
         self.tags = tags
-
-    def toJson(self):
-        json.dumps(self, default=lambda o: o.__dict__)
+        self.json = to_json(self)
 
 class AzureSubscription:
 

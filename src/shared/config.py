@@ -8,7 +8,7 @@ from azure.keyvault.secrets import SecretClient
 from azure.identity import DefaultAzureCredential
 import log
 import time
-from utils import Utils
+from utils import is_none_or_empty_str
 
 config_key_db_host = 'DB-HOST'
 config_key_db_user_name= 'DB-USER-NAME'
@@ -166,7 +166,7 @@ class ConfigLoader:
     # azure.identity.EnvironmentCredential will check environ for tenant id, client id and client secret
     def set_environ_azserviceprincpal_cred(self, tenantid, clientid, clientsecret) -> None:
 
-        if not Utils.is_none_or_empty_str(tenantid) and not Utils.is_none_or_empty_str(clientid) and not Utils.is_none_or_empty_str(clientsecret):
+        if not is_none_or_empty_str(tenantid) and not is_none_or_empty_str(clientid) and not is_none_or_empty_str(clientsecret):
             os.environ.setdefault(config_key_azidenity_tenantid, tenantid) 
             os.environ.setdefault(config_key_azidenity_clientid, clientid)
             os.environ.setdefault(config_key_azidenity_clientsecret, clientsecret)
@@ -175,7 +175,7 @@ class ConfigLoader:
 
         #props = vars(appconfig)
 
-        if Utils.is_none_or_empty_str(dbHost) or Utils.is_none_or_empty_str(dbUserName) or Utils.is_none_or_empty_str(dbUserPassword):
+        if is_none_or_empty_str(dbHost) or is_none_or_empty_str(dbUserName) or is_none_or_empty_str(dbUserPassword):
             return False
 
         return True    
