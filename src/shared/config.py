@@ -6,9 +6,9 @@ import os
 from dotenv import load_dotenv
 from azure.keyvault.secrets import SecretClient
 from azure.identity import DefaultAzureCredential
-import log
+import shared.log
 import time
-from utils import is_none_or_empty_str
+from shared.utils import is_none_or_empty_str
 
 config_key_db_host = 'DB-HOST'
 config_key_db_user_name= 'DB-USER-NAME'
