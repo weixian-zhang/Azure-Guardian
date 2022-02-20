@@ -10,13 +10,6 @@
             "request": "launch",
             "program": "${workspaceFolder}/src/apiserver/main.py",
             "console": "integratedTerminal"
-        },
-        {
-            "name": "debug test",
-            "type": "python",
-            "request": "launch",
-            "program": "${workspaceFolder}/src/shared/tests/test_db.py",
-            "console": "integratedTerminal"
         }
     ]
 }

@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
-import shared.log
-from shared.config import AppConfig
+import log
+from config import AppConfig
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, Date, create_engine
 from sqlalchemy_utils import database_exists, create_database

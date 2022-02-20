@@ -24,6 +24,7 @@ load_shared_modules()
 from config import ConfigLoader, AppConfig
 from db import PostgreSql
 from utils import to_json
+from opa import PolicyUnitOfWork
 
 class App:
 
@@ -73,7 +74,9 @@ class App:
 
             self.appConfig = configLoader.load_config()
 
-            azrsc = AzResource()
+            # opa = PolicyUnitOfWork(self.appConfig, PostgreSql(self.appConfig))
+
+            # opa.create_or_update_policy('dasd', App.policy, 'das', 'dsasa')
 
             # subs: AzureSubscription
             # subs =  azrsc.get_all_subscriptions_by_azidenity()

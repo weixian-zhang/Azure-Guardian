@@ -1,11 +1,16 @@
-# from distutils.command.config import config
-# from distutils.core import setup
 import unittest
-from unittest import mock
+from unittest.mock import Mock, patch
 
-import shared.log
-from shared.config import ConfigLoader, AppConfig
-from shared.db import Policy
+def load_shared_modules():
+    import os
+    import sys
+    # adding shared folder path to system paths
+    sharedPath = os.path.join(os.getcwd(),'src', 'shared')
+    sys.path.insert(1,sharedPath)
+load_shared_modules()
+
+from config import ConfigLoader, AppConfig
+from db import Policy
 
 class DBTest(unittest.TestCase):
 
@@ -20,7 +25,7 @@ class DBTest(unittest.TestCase):
     
     def test_is_policy_exists_not_exists(self):
 
-        with mock.patch("shared.db.PostgreSql.is_policy_exists") as is_policy_exists:
+        with patch("shared.db.PostgreSql.is_policy_exists") as is_policy_exists:
             is_policy_exists.return_value = False, None
 
             expected = False
@@ -32,7 +37,7 @@ class DBTest(unittest.TestCase):
     
     def test_is_policy_exists_exists(self):
 
-        with mock.patch("shared.db.PostgreSql.is_policy_exists") as is_policy_exists:
+        with patch("shared.db.PostgreSql.is_policy_exists") as is_policy_exists:
             is_policy_exists.return_value = True, Policy()
 
             expected = True
@@ -43,13 +48,13 @@ class DBTest(unittest.TestCase):
 
     def test_create_or_update_policy_with_no_existing_policy(self): ##, resourceProvider, packageName, desc, username, rego):
 
-        with mock.patch("shared.db.PostgreSql.is_policy_exists") as is_policy_exists:
+        with patch("shared.db.PostgreSql.is_policy_exists") as is_policy_exists:
             is_policy_exists.return_value = False, None
 
-            with mock.patch("shared.db.PostgreSql.update_policy") as update_policy:
+            with patch("shared.db.PostgreSql.update_policy") as update_policy:
                 update_policy.return_value = True
 
-                with mock.patch("shared.db.PostgreSql.create_or_update_policy") as create_or_update_policy:
+                with patch("shared.db.PostgreSql.create_or_update_policy") as create_or_update_policy:
                     create_or_update_policy.return_value = True
 
                     resourceProvider = 'microsoft.compute.nic.unattached'
@@ -66,13 +71,13 @@ class DBTest(unittest.TestCase):
 
     def test_create_or_update_policy_with_existing_policy(self): ##, resourceProvider, packageName, desc, username, rego):
 
-        with mock.patch("shared.db.PostgreSql.is_policy_exists") as is_policy_exists:
+        with patch("shared.db.PostgreSql.is_policy_exists") as is_policy_exists:
             is_policy_exists.return_value = True, Policy()
 
-            with mock.patch("shared.db.PostgreSql.update_policy") as update_policy:
+            with patch("shared.db.PostgreSql.update_policy") as update_policy:
                 update_policy.return_value = True
 
-                with mock.patch("shared.db.PostgreSql.create_or_update_policy") as create_or_update_policy:
+                with patch("shared.db.PostgreSql.create_or_update_policy") as create_or_update_policy:
                     create_or_update_policy.return_value = True
 
                     resourceProvider = 'microsoft.compute.nic.unattached'
