@@ -18,3 +18,10 @@ def is_int(num):
 def to_json(obj):
     return json.dumps(obj, default=lambda o: o.__dict__, 
         sort_keys=True, indent=4)
+
+def load_shared_modules():
+    import sys
+    import os
+    # adding Folder_2 to the system path
+    sharedPath = os.path.join(os.getcwd(),'src', 'shared')
+    sys.path.insert(1,sharedPath)

@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+import log
 from config import AppConfig
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, Date, create_engine
@@ -6,7 +7,6 @@ from sqlalchemy_utils import database_exists, create_database
 from sqlalchemy.orm import sessionmaker
 from datetime import date
 from typing import List
-import log
 import uuid
 
 class DB(ABC):
@@ -15,11 +15,6 @@ class DB(ABC):
     def create_or_update_policy(self, resourceProvider, packageName, desc, username):
         # + id, time
         pass
-
-    # @abstractmethod
-    # def update_policy(self, id):
-    #     # + id, time
-    #     pass
 
     @abstractmethod
     def delete_policy(self, id):
@@ -58,14 +53,14 @@ class PostgreSql(DB):
 
         dbUri = f'postgresql://{appconfig.dbUserName}:{appconfig.dbUserPass}@{appconfig.dbHost}:5432/{PostgreSql.DbName}'
 
-        engine = create_engine(dbUri)
+        self.engine = create_engine(dbUri)
 
-        if not database_exists(engine.url):
-            create_database(engine.url)
+        if not database_exists(self.engine.url):
+            create_database(self.engine.url)
 
-        Base.metadata.create_all(engine)
+        Base.metadata.create_all(self.engine)
 
-        Session = sessionmaker(bind=engine)
+        Session = sessionmaker(bind=self.engine)
 
         self.PostgreSession: Session
         self.PostgreSession = Session()
