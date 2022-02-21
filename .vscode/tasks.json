@@ -7,6 +7,12 @@
             "label": "run OPA container",
             "type": "shell",
             "command": "docker run -it --rm -p 8181:8181 openpolicyagent/opa run --server --addr :8181"
+        },
+        {
+            "label": "run NATS container ",
+            "type": "shell",
+            "command": "docker run --name nats --network nats --rm -p 4222:4222 -p 8222:8222 nats --http_port 8222",
+            "problemMatcher": []
         }
     ]
 }
